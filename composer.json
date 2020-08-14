@@ -1,0 +1,36 @@
+{
+    "name": "dicr/yii2-p1sms",
+    "type": "yii2-extension",
+    "license": "MIT",
+    "homepage": "https://gitlab.com/dicr/yii2-p1sms",
+    "description": "Клиент p1sms.ru для Yii2",
+    "keywords": ["dicr", "yii2", "p1sms"],
+    "authors": [
+        {
+            "name": "Игорь Тарасов",
+            "email": "develop@dicr.org",
+            "homepage": "http://dicr.org",
+            "role": "developer"
+        }
+    ],
+    "support": {
+        "source": "https://gitlab.com/dicr/yii2-p1sms.git"
+    },
+    "autoload": {
+        "psr-4": {
+            "dicr\\p1sms\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "repositories": [
+        {"type": "git", "url": "https://gitlab.com/dicr/yii2-validate.git"},
+        {"type": "composer", "url": "https://asset-packagist.org"}
+    ],
+    "require": {
+        "php": "~7.2",
+        "yiisoft/yii2": "~2.0",
+        "dicr/yii2-validate": "~2.0",
+        "yiisoft/yii2-httpclient": "~2.0"
+    }
+}
