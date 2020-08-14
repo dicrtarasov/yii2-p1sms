@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.08.20 09:48:29
+ * @version 14.08.20 10:09:31
  */
 
 declare(strict_types = 1);
@@ -151,8 +151,8 @@ class P1SmsModule extends Module
     /**
      * Отправка SMS.
      *
-     * @param SMS[] $smss массив отправляемых SMS
-     * @return array
+     * @param P1Sms[] $smss массив отправляемых SMS
+     * @return array данные ответа
      * @throws Exception
      * @throws InvalidConfigException
      * @throws ValidateException
@@ -166,7 +166,7 @@ class P1SmsModule extends Module
 
         return $this->post('create', [
             'sms' => array_map(static function ($sms) {
-                if (! $sms instanceof SMS) {
+                if (! $sms instanceof P1Sms) {
                     throw new InvalidArgumentException('sms: ' . gettype($sms));
                 }
 

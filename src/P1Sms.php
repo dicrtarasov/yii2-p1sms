@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.08.20 09:46:14
+ * @version 14.08.20 10:09:53
  */
 
 declare(strict_types = 1);
@@ -17,9 +17,9 @@ use function is_a;
 use function is_array;
 
 /**
- * SMS
+ * P1Sms
  */
-class SMS extends Model
+class P1Sms extends Model
 {
     /** @var string дешевый канал с негарантированной медленной доставкой для массовых рассылок */
     public const CHANNEL_DIGIT = 'digit';
@@ -46,7 +46,7 @@ class SMS extends Model
     public $link;
 
     /** @var string Канал сообщений (digit, char, viber, vk, telegram) */
-    public $channel;
+    public $channel = self::CHANNEL_CHAR;
 
     /** @var string Имя отправителя */
     public $sender;
