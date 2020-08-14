@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.08.20 10:09:31
+ * @version 14.08.20 10:12:37
  */
 
 declare(strict_types = 1);
@@ -21,6 +21,7 @@ use yii\httpclient\Client;
 use function array_filter;
 use function array_map;
 use function gettype;
+use function is_array;
 use function is_callable;
 use function is_object;
 
@@ -151,17 +152,21 @@ class P1SmsModule extends Module
     /**
      * Отправка SMS.
      *
-     * @param P1Sms[] $smss массив отправляемых SMS
+     * @param P1Sms[]|P1Sms $sms отправляемые SMS
      * @return array данные ответа
      * @throws Exception
      * @throws InvalidConfigException
      * @throws ValidateException
      * @throws \yii\httpclient\Exception
      */
-    public function sendSms(array $smss): array
+    public function sendSms($sms): array
     {
-        if (empty($smss)) {
+        if (empty($sms)) {
             throw new InvalidArgumentException('empty sms');
+        }
+
+        if (! is_array($sms)) {
+            $sms = [$sms];
         }
 
         return $this->post('create', [
@@ -171,7 +176,7 @@ class P1SmsModule extends Module
                 }
 
                 return $sms->params();
-            }, $smss)
+            }, $sms)
         ]);
     }
 }
