@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.08.20 11:08:08
+ * @version 14.08.20 11:14:16
  */
 
 declare(strict_types = 1);
@@ -19,6 +19,7 @@ use function in_array;
 use function is_a;
 use function is_array;
 use function is_object;
+use function preg_replace;
 
 /**
  * P1Sms
@@ -100,7 +101,10 @@ class P1Sms extends Model
     {
         return [
             ['phone', 'required'],
-            ['phone', 'string', 'max' => 11],
+            ['phone', 'filter', 'filter' => function ($phone) {
+                return (string)preg_replace('~[\D]+~u', '', $phone);
+            }],
+            ['phone', 'string', 'length' => 11],
 
             ['text', 'trim'],
             ['text', 'default'],
