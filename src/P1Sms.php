@@ -3,18 +3,22 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.08.20 10:09:53
+ * @version 14.08.20 11:08:08
  */
 
 declare(strict_types = 1);
 namespace dicr\p1sms;
 
 use dicr\validate\ValidateException;
+use yii\base\Exception;
+use yii\base\InvalidConfigException;
 use yii\base\Model;
 
 use function gettype;
+use function in_array;
 use function is_a;
 use function is_array;
+use function is_object;
 
 /**
  * P1Sms
@@ -73,6 +77,22 @@ class P1Sms extends Model
     /** @var ?int ID схемы каскадных смс. ID, заранее созданной схемы каскадных сообщений. */
     public $cascadeSchemeId;
 
+    /** @var P1SmsModule */
+    private $_module;
+
+    /**
+     * P1Sms constructor.
+     *
+     * @param P1SmsModule $module
+     * @param array $config
+     */
+    public function __construct(P1SmsModule $module, $config = [])
+    {
+        parent::__construct($config);
+
+        $this->_module = $module;
+    }
+
     /**
      * @inheritDoc
      */
@@ -122,9 +142,9 @@ class P1Sms extends Model
     /**
      * Проверка параметров канала.
      *
-     * @param string $attribute
+     * @param string $attr
      */
-    public function validateParams(string $attribute): void
+    public function validateParams(string $attr): void
     {
         static $channels = [
             'viberParameters' => self::CHANNEL_VIBER,
@@ -138,29 +158,33 @@ class P1Sms extends Model
             'tgParameters' => TgParameters::class
         ];
 
-        if ($this->channel !== ($channels[$attribute] ?? '')) {
-            $this->{$attribute} = null;
-        } elseif (empty($this->{$attribute})) {
-            $this->addError($attribute, 'Требуются параметры');
-        } else {
-            $class = $classes[$attribute];
+        $params = $this->{$attr};
 
-            if (is_array($this->{$attribute})) {
-                $this->{$attribute} = new $class($this->{$attribute});
+        if ($this->channel !== ($channels[$attr] ?? '')) {
+            $params = null;
+        } elseif (empty($params)) {
+            $this->addError($attr, 'Требуются параметры');
+        } else {
+            $class = $classes[$attr];
+
+            if (is_array($params)) {
+                $params = new $class($params);
             }
 
-            if (! is_a($this->{$attribute}, $class, true)) {
+            if (! is_object($params) || ! is_a($params, $class, true)) {
                 $this->addError(
-                    $attribute, 'Некорректный тип: ' . gettype($this->{$attribute})
+                    $attr, 'Некорректный тип: ' . gettype($params)
                 );
-            } elseif ($this->{$attribute}->validate()) {
-                $this->{$attribute} = $this->{$attribute}->params();
+            } elseif ($params->validate()) {
+                $params = $params->params();
             } else {
                 $this->addError(
-                    $attribute, (new ValidateException($this->{$attribute}))->getMessage()
+                    $attr, (new ValidateException($params))->getMessage()
                 );
             }
         }
+
+        $this->{$attr} = $params;
     }
 
     /**
@@ -176,5 +200,34 @@ class P1Sms extends Model
         }
 
         return P1SmsModule::filterParams($this->attributes);
+    }
+
+    /**
+     * Отправить сообщение.
+     *
+     * @return array результаты отправки
+     * @throws Exception
+     * @throws ValidateException
+     * @throws InvalidConfigException
+     * @throws \yii\httpclient\Exception
+     */
+    public function send(): array
+    {
+        $ret = $this->_module->post('create', [
+            'sms' => [$this->params()]
+        ]);
+
+        // получаем результат отправки одного сообщения
+        $ret = array_shift($ret);
+
+        if (empty($ret) || empty($ret['status'])) {
+            throw new Exception('Нет результата отправки');
+        }
+
+        if (in_array($ret['status'], ['error', 'low_balance', 'low_partner_balance', 'rejected'], true)) {
+            throw new Exception('Ошибка отправки: ' . ($ret['errorDescription'] ?? $ret['status']));
+        }
+
+        return $ret;
     }
 }

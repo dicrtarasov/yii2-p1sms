@@ -3,16 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license proprietary
- * @version 14.08.20 10:12:37
+ * @version 14.08.20 11:08:29
  */
 
 declare(strict_types = 1);
 namespace dicr\p1sms;
 
-use dicr\validate\ValidateException;
 use Yii;
 use yii\base\Exception;
-use yii\base\InvalidArgumentException;
 use yii\base\InvalidConfigException;
 use yii\base\Module;
 use yii\helpers\Json;
@@ -20,8 +18,6 @@ use yii\httpclient\Client;
 
 use function array_filter;
 use function array_map;
-use function gettype;
-use function is_array;
 use function is_callable;
 use function is_object;
 
@@ -43,6 +39,9 @@ class P1SmsModule extends Module
 
     /** @var array опции http-клиента */
     public $clientConfig = [];
+
+    /** @var array конфиг СМС */
+    public $smsConfig = [];
 
     /**
      * @inheritDoc
@@ -116,7 +115,7 @@ class P1SmsModule extends Module
      * @throws \yii\httpclient\Exception
      * @throws Exception
      */
-    private function post(string $url, array $data)
+    public function post(string $url, array $data)
     {
         $request = $this->client()->post($url, array_merge($data, [
             'apiKey' => $this->apiKey
@@ -150,33 +149,17 @@ class P1SmsModule extends Module
     }
 
     /**
-     * Отправка SMS.
+     * Создает СМС.
      *
-     * @param P1Sms[]|P1Sms $sms отправляемые SMS
-     * @return array данные ответа
-     * @throws Exception
+     * @param array $config
+     * @return P1Sms
      * @throws InvalidConfigException
-     * @throws ValidateException
-     * @throws \yii\httpclient\Exception
      */
-    public function sendSms($sms): array
+    public function createSms(array $config = []): P1Sms
     {
-        if (empty($sms)) {
-            throw new InvalidArgumentException('empty sms');
-        }
-
-        if (! is_array($sms)) {
-            $sms = [$sms];
-        }
-
-        return $this->post('create', [
-            'sms' => array_map(static function ($sms) {
-                if (! $sms instanceof P1Sms) {
-                    throw new InvalidArgumentException('sms: ' . gettype($sms));
-                }
-
-                return $sms->params();
-            }, $sms)
-        ]);
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return Yii::createObject(
+            $config + ($this->smsConfig ?: []) + ['class' => P1Sms::class], [$this]
+        );
     }
 }
