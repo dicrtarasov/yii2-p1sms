@@ -2,29 +2,25 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 14.08.20 11:14:16
+ * @license MIT
+ * @version 28.08.20 06:46:56
  */
 
 declare(strict_types = 1);
-namespace dicr\p1sms;
+namespace dicr\p1sms\request;
 
+use dicr\p1sms\P1SmsRequest;
 use dicr\validate\ValidateException;
 use yii\base\Exception;
-use yii\base\InvalidConfigException;
-use yii\base\Model;
 
 use function gettype;
-use function in_array;
-use function is_a;
 use function is_array;
-use function is_object;
 use function preg_replace;
 
 /**
  * P1Sms
  */
-class P1Sms extends Model
+class SmsRequest extends P1SmsRequest
 {
     /** @var string дешевый канал с негарантированной медленной доставкой для массовых рассылок */
     public const CHANNEL_DIGIT = 'digit';
@@ -78,22 +74,6 @@ class P1Sms extends Model
     /** @var ?int ID схемы каскадных смс. ID, заранее созданной схемы каскадных сообщений. */
     public $cascadeSchemeId;
 
-    /** @var P1SmsModule */
-    private $_module;
-
-    /**
-     * P1Sms constructor.
-     *
-     * @param P1SmsModule $module
-     * @param array $config
-     */
-    public function __construct(P1SmsModule $module, $config = [])
-    {
-        parent::__construct($config);
-
-        $this->_module = $module;
-    }
-
     /**
      * @inheritDoc
      */
@@ -101,7 +81,7 @@ class P1Sms extends Model
     {
         return [
             ['phone', 'required'],
-            ['phone', 'filter', 'filter' => function ($phone) {
+            ['phone', 'filter', 'filter' => static function ($phone) {
                 return (string)preg_replace('~[\D]+~u', '', $phone);
             }],
             ['phone', 'string', 'length' => 11],
@@ -139,99 +119,94 @@ class P1Sms extends Model
             ['cascadeSchemeId', 'integer', 'min' => 1],
             ['cascadeSchemeId', 'filter', 'filter' => 'intval', 'skipOnEmpty' => true],
 
-            [['viberParameters', 'vkParameters', 'tgParameters'], 'validateParams']
+            ['viberParameters', function (string $attribute) {
+                if (! empty($this->{$attribute})) {
+                    if (! $this->{$attribute}->validate()) {
+                        $this->addError(
+                            $attribute, (new ValidateException($this->{$attribute}))->getMessage()
+                        );
+                    }
+                } elseif ($this->channel === self::CHANNEL_VIBER) {
+                    $this->addError($attribute, 'Необходимо указать параметры: ' . $attribute);
+                }
+            }],
+
+            ['vkParameters', function (string $attribute) {
+                if (! empty($this->{$attribute})) {
+                    if (! $this->{$attribute}->validate()) {
+                        $this->addError(
+                            $attribute, (new ValidateException($this->{$attribute}))->getMessage()
+                        );
+                    }
+                } elseif ($this->channel === self::CHANNEL_VK) {
+                    $this->addError($attribute, 'Необходимо указать параметры: ' . $attribute);
+                }
+            }],
+
+            ['tgParameters', function (string $attribute) {
+                if (! empty($this->{$attribute})) {
+                    if (! $this->{$attribute}->validate()) {
+                        $this->addError(
+                            $attribute, (new ValidateException($this->{$attribute}))->getMessage()
+                        );
+                    }
+                } elseif ($this->channel === self::CHANNEL_TELEGRAM) {
+                    $this->addError($attribute, 'Необходимо указать параметры: ' . $attribute);
+                }
+            }]
         ];
     }
 
     /**
-     * Проверка параметров канала.
-     *
-     * @param string $attr
+     * @inheritDoc
      */
-    public function validateParams(string $attr): void
+    public function attributeEntities(): array
     {
-        static $channels = [
-            'viberParameters' => self::CHANNEL_VIBER,
-            'vkParameters' => self::CHANNEL_VK,
-            'tgParameters' => self::CHANNEL_TELEGRAM
-        ];
-
-        static $classes = [
+        return [
             'viberParameters' => ViberParameters::class,
             'vkParameters' => VkParameters::class,
-            'tgParameters' => TgParameters::class
+            'tgParameters' => TgParameters::class,
         ];
-
-        $params = $this->{$attr};
-
-        if ($this->channel !== ($channels[$attr] ?? '')) {
-            $params = null;
-        } elseif (empty($params)) {
-            $this->addError($attr, 'Требуются параметры');
-        } else {
-            $class = $classes[$attr];
-
-            if (is_array($params)) {
-                $params = new $class($params);
-            }
-
-            if (! is_object($params) || ! is_a($params, $class, true)) {
-                $this->addError(
-                    $attr, 'Некорректный тип: ' . gettype($params)
-                );
-            } elseif ($params->validate()) {
-                $params = $params->params();
-            } else {
-                $this->addError(
-                    $attr, (new ValidateException($params))->getMessage()
-                );
-            }
-        }
-
-        $this->{$attr} = $params;
     }
 
     /**
-     * Параметры JSON.
-     *
-     * @return array
-     * @throws ValidateException
+     * @inheritDoc
      */
-    public function params(): array
+    public function getJson(): array
     {
-        if (! $this->validate()) {
-            throw new ValidateException($this);
-        }
+        return [
+            'sms' => [
+                parent::getJson()
+            ]
+        ];
+    }
 
-        return P1SmsModule::filterParams($this->attributes);
+    /**
+     * @inheritDoc
+     */
+    public function url(): string
+    {
+        return 'apiSms/create';
     }
 
     /**
      * Отправить сообщение.
      *
-     * @return array результаты отправки
+     * @return array результаты отправки сообщения
      * @throws Exception
-     * @throws ValidateException
-     * @throws InvalidConfigException
-     * @throws \yii\httpclient\Exception
      */
     public function send(): array
     {
-        $ret = $this->_module->post('create', [
-            'sms' => [$this->params()]
-        ]);
+        /** @var array $data */
+        $data = parent::send();
 
         // получаем результат отправки одного сообщения
-        $ret = array_shift($ret);
+        $data = array_shift($data);
 
-        if (empty($ret) || empty($ret['status'])) {
+        if (empty($data) || empty($data['status'])) {
             throw new Exception('Нет результата отправки');
         }
 
-        if (in_array($ret['status'], ['error', 'low_balance', 'low_partner_balance', 'rejected'], true)) {
-            throw new Exception('Ошибка отправки: ' . ($ret['errorDescription'] ?? $ret['status']));
-        }
-
-        return $ret;
+        return $data;
     }
 }

@@ -2,22 +2,21 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 14.08.20 09:09:01
+ * @license MIT
+ * @version 28.08.20 06:46:56
  */
 
 declare(strict_types = 1);
-namespace dicr\p1sms;
+namespace dicr\p1sms\request;
 
-use dicr\validate\ValidateException;
-use yii\base\Model;
+use dicr\p1sms\JsonEntity;
 
 use function is_array;
 
 /**
  * Параметры Telegram.
  */
-class TgParameters extends Model
+class TgParameters extends JsonEntity
 {
     /** @var string Username Telegram Бота */
     public $botUsername;
@@ -41,19 +40,5 @@ class TgParameters extends Model
                 }
             }]
         ];
-    }
-
-    /**
-     * Параметры JSON.
-     *
-     * @throws ValidateException
-     */
-    public function params(): array
-    {
-        if (! $this->validate()) {
-            throw new ValidateException($this);
-        }
-
-        return P1SmsModule::filterParams($this->attributes);
     }
 }

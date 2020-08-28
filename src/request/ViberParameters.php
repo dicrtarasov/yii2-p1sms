@@ -2,20 +2,19 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 14.08.20 09:09:31
+ * @license MIT
+ * @version 28.08.20 06:46:56
  */
 
 declare(strict_types = 1);
-namespace dicr\p1sms;
+namespace dicr\p1sms\request;
 
-use dicr\validate\ValidateException;
-use yii\base\Model;
+use dicr\p1sms\JsonEntity;
 
 /**
  * Параметры сообщения Viber.
  */
-class ViberParameters extends Model
+class ViberParameters extends JsonEntity
 {
     /** @var string сообщение без кнопки */
     public const TYPE_TEXT = 'text';
@@ -81,20 +80,5 @@ class ViberParameters extends Model
             ['smsLifetime', 'integer', 'min' => 60, 'max' => 86400],
             ['smsLifetime', 'filter', 'filter' => 'intval', 'skipOnEmpty' => true],
         ];
-    }
-
-    /**
-     * Параметры JSON.
-     *
-     * @return array
-     * @throws ValidateException
-     */
-    public function params(): array
-    {
-        if (! $this->validate()) {
-            throw new ValidateException($this);
-        }
-
-        return P1SmsModule::filterParams($this->attributes);
     }
 }

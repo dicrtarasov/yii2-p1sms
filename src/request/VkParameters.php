@@ -2,22 +2,21 @@
 /*
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license proprietary
- * @version 14.08.20 09:09:23
+ * @license MIT
+ * @version 28.08.20 06:46:56
  */
 
 declare(strict_types = 1);
-namespace dicr\p1sms;
+namespace dicr\p1sms\request;
 
-use dicr\validate\ValidateException;
-use yii\base\Model;
+use dicr\p1sms\JsonEntity;
 
 use function is_array;
 
 /**
  * Параметры сообщения VK.
  */
-class VkParameters extends Model
+class VkParameters extends JsonEntity
 {
     /**
      * @var int Идентификатор шаблона.
@@ -117,20 +116,5 @@ class VkParameters extends Model
             ['issueTime', 'integer', 'min' => 1],
             ['issueTime', 'filter', 'filter' => 'intval', 'skipOnEmpty' => true],
         ];
-    }
-
-    /**
-     * Параметры JSON.
-     *
-     * @return array
-     * @throws ValidateException
-     */
-    public function params(): array
-    {
-        if (! $this->validate()) {
-            throw new ValidateException($this);
-        }
-
-        return P1SmsModule::filterParams($this->attributes);
     }
 }
