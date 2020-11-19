@@ -3,20 +3,20 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.08.20 06:46:56
+ * @version 19.11.20 22:08:56
  */
 
 declare(strict_types = 1);
 namespace dicr\p1sms\request;
 
-use dicr\p1sms\JsonEntity;
+use dicr\p1sms\P1SMSEntity;
 
 use function is_array;
 
 /**
  * Параметры сообщения VK.
  */
-class VkParameters extends JsonEntity
+class VkParameters extends P1SMSEntity
 {
     /**
      * @var int Идентификатор шаблона.
@@ -77,7 +77,7 @@ class VkParameters extends JsonEntity
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return [
             ['templateId', 'required'],

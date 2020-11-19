@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.08.20 06:28:48
+ * @version 19.11.20 22:24:06
  */
 
 declare(strict_types = 1);
@@ -45,7 +45,7 @@ class P1SmsModule extends Module
      * @inheritDoc
      * @throws InvalidConfigException
      */
-    public function init()
+    public function init() : void
     {
         parent::init();
 
@@ -108,7 +108,7 @@ class P1SmsModule extends Module
      * @return SmsRequest
      * @throws InvalidConfigException
      */
-    public function createSmsRequest(array $config = []): SmsRequest
+    public function smsRequest(array $config = []) : SmsRequest
     {
         /** @noinspection PhpIncompatibleReturnTypeInspection */
         return $this->createRequest(array_merge([

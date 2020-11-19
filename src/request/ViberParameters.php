@@ -3,18 +3,18 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.08.20 06:46:56
+ * @version 19.11.20 22:09:39
  */
 
 declare(strict_types = 1);
 namespace dicr\p1sms\request;
 
-use dicr\p1sms\JsonEntity;
+use dicr\p1sms\P1SMSEntity;
 
 /**
  * Параметры сообщения Viber.
  */
-class ViberParameters extends JsonEntity
+class ViberParameters extends P1SMSEntity
 {
     /** @var string сообщение без кнопки */
     public const TYPE_TEXT = 'text';
@@ -46,7 +46,7 @@ class ViberParameters extends JsonEntity
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return [
             ['type', 'required'],
@@ -56,19 +56,19 @@ class ViberParameters extends JsonEntity
 
             ['btnText', 'trim'],
             ['btnText', 'default'],
-            ['btnText', 'require', 'when' => function () {
+            ['btnText', 'require', 'when' => function () : bool {
                 return $this->type === self::TYPE_TEXT || $this->type === self::TYPE_PHONE;
             }],
 
             ['btnLink', 'trim'],
             ['btnLink', 'default'],
-            ['btnLink', 'required', 'when' => function () {
+            ['btnLink', 'required', 'when' => function () : bool {
                 return $this->type === self::TYPE_LINK;
             }],
 
             ['btnPhone', 'trim'],
             ['btnPhone', 'default'],
-            ['btnPhone', 'required', 'when' => function () {
+            ['btnPhone', 'required', 'when' => function () : bool {
                 return $this->type === self::TYPE_PHONE;
             }],
             ['btnPhone', 'string', 'max' => 11],

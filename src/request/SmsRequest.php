@@ -3,14 +3,14 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.08.20 06:46:56
+ * @version 19.11.20 22:16:18
  */
 
 declare(strict_types = 1);
 namespace dicr\p1sms\request;
 
+use dicr\json\EntityValidator;
 use dicr\p1sms\P1SmsRequest;
-use dicr\validate\ValidateException;
 use yii\base\Exception;
 
 use function gettype;
@@ -77,11 +77,11 @@ class SmsRequest extends P1SmsRequest
     /**
      * @inheritDoc
      */
-    public function rules()
+    public function rules() : array
     {
         return [
             ['phone', 'required'],
-            ['phone', 'filter', 'filter' => static function ($phone) {
+            ['phone', 'filter', 'filter' => static function ($phone) : string {
                 return (string)preg_replace('~[\D]+~u', '', $phone);
             }],
             ['phone', 'string', 'length' => 11],
@@ -98,7 +98,7 @@ class SmsRequest extends P1SmsRequest
             ]],
 
             ['sender', 'default'],
-            ['sender', 'required', 'when' => function () {
+            ['sender', 'required', 'when' => function () : bool {
                 return $this->channel === self::CHANNEL_CHAR || $this->channel === self::CHANNEL_VIBER;
             }],
 
@@ -119,40 +119,19 @@ class SmsRequest extends P1SmsRequest
             ['cascadeSchemeId', 'integer', 'min' => 1],
             ['cascadeSchemeId', 'filter', 'filter' => 'intval', 'skipOnEmpty' => true],
 
-            ['viberParameters', function (string $attribute) {
-                if (! empty($this->{$attribute})) {
-                    if (! $this->{$attribute}->validate()) {
-                        $this->addError(
-                            $attribute, (new ValidateException($this->{$attribute}))->getMessage()
-                        );
-                    }
-                } elseif ($this->channel === self::CHANNEL_VIBER) {
-                    $this->addError($attribute, 'Необходимо указать параметры: ' . $attribute);
-                }
+            ['viberParameters', EntityValidator::class, 'class' => ViberParameters::class],
+            ['viberParameters', 'required', 'when' => function () : bool {
+                return $this->channel === self::CHANNEL_VIBER;
             }],
 
-            ['vkParameters', function (string $attribute) {
-                if (! empty($this->{$attribute})) {
-                    if (! $this->{$attribute}->validate()) {
-                        $this->addError(
-                            $attribute, (new ValidateException($this->{$attribute}))->getMessage()
-                        );
-                    }
-                } elseif ($this->channel === self::CHANNEL_VK) {
-                    $this->addError($attribute, 'Необходимо указать параметры: ' . $attribute);
-                }
+            ['vkParameters', EntityValidator::class, 'class' => VkParameters::class],
+            ['vkParameters', 'required', 'when' => function () : bool {
+                return $this->channel === self::CHANNEL_VK;
             }],
 
-            ['tgParameters', function (string $attribute) {
-                if (! empty($this->{$attribute})) {
-                    if (! $this->{$attribute}->validate()) {
-                        $this->addError(
-                            $attribute, (new ValidateException($this->{$attribute}))->getMessage()
-                        );
-                    }
-                } elseif ($this->channel === self::CHANNEL_TELEGRAM) {
-                    $this->addError($attribute, 'Необходимо указать параметры: ' . $attribute);
-                }
+            ['tgParameters', EntityValidator::class, 'class' => TgParameters::class],
+            ['tgParameters', 'required', 'when' => function () : bool {
+                return $this->channel === self::CHANNEL_TELEGRAM;
             }]
         ];
     }
@@ -160,7 +139,7 @@ class SmsRequest extends P1SmsRequest
     /**
      * @inheritDoc
      */
-    public function attributeEntities(): array
+    public function attributeEntities() : array
     {
         return [
             'viberParameters' => ViberParameters::class,
@@ -172,7 +151,7 @@ class SmsRequest extends P1SmsRequest
     /**
      * @inheritDoc
      */
-    public function getJson(): array
+    public function getJson() : array
     {
         return [
             'sms' => [
@@ -184,7 +163,7 @@ class SmsRequest extends P1SmsRequest
     /**
      * @inheritDoc
      */
-    public function url(): string
+    public function url() : string
     {
         return 'apiSms/create';
     }
@@ -195,7 +174,7 @@ class SmsRequest extends P1SmsRequest
      * @return array результаты отправки сообщения
      * @throws Exception
      */
-    public function send(): array
+    public function send() : array
     {
         /** @var array $data */
         $data = parent::send();

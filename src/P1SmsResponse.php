@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.08.20 06:40:06
+ * @version 19.11.20 21:56:46
  */
 
 declare(strict_types = 1);
@@ -12,7 +12,7 @@ namespace dicr\p1sms;
 /**
  * Ответ от P1Sms.
  */
-class P1SmsResponse extends JsonEntity
+class P1SmsResponse extends P1SMSEntity
 {
     /** @var string */
     public const STATUS_SUCCESS = 'success';

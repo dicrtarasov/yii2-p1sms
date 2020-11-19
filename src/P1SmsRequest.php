@@ -3,7 +3,7 @@
  * @copyright 2019-2020 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
  * @license MIT
- * @version 28.08.20 06:46:56
+ * @version 19.11.20 22:21:09
  */
 
 declare(strict_types = 1);
@@ -18,10 +18,8 @@ use function array_merge;
 
 /**
  * Запрос P1Sms
- *
- * @property-read P1SmsModule $module
  */
-abstract class P1SmsRequest extends JsonEntity
+abstract class P1SmsRequest extends P1SMSEntity
 {
     /** @var P1SmsModule */
     protected $_module;
@@ -37,16 +35,6 @@ abstract class P1SmsRequest extends JsonEntity
         $this->_module = $module;
 
         parent::__construct($config);
-    }
-
-    /**
-     * Модуль.
-     *
-     * @return P1SmsModule
-     */
-    public function getModule(): P1SmsModule
-    {
-        return $this->_module;
     }
 
     /**
@@ -73,7 +61,7 @@ abstract class P1SmsRequest extends JsonEntity
      * @return array результаты отправки (переопределяется в наследнике)
      * @throws Exception
      */
-    public function send()
+    public function send() : array
     {
         if (! $this->validate()) {
             throw new ValidateException($this);
