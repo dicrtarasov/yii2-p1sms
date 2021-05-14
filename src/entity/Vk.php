@@ -1,22 +1,22 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 19.11.20 22:08:56
+ * @license GPL-3.0-or-later
+ * @version 15.05.21 01:50:34
  */
 
 declare(strict_types = 1);
-namespace dicr\p1sms\request;
+namespace dicr\p1sms\entity;
 
-use dicr\p1sms\P1SMSEntity;
+use dicr\p1sms\Entity;
 
 use function is_array;
 
 /**
  * Параметры сообщения VK.
  */
-class VkParameters extends P1SMSEntity
+class Vk extends Entity
 {
     /**
      * @var int Идентификатор шаблона.

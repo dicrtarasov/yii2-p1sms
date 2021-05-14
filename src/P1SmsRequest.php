@@ -1,38 +1,37 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 19.11.20 22:21:09
+ * @license GPL-3.0-or-later
+ * @version 15.05.21 01:28:31
  */
 
 declare(strict_types = 1);
 namespace dicr\p1sms;
 
+use dicr\helper\Log;
 use dicr\validate\ValidateException;
-use Yii;
 use yii\base\Exception;
-use yii\httpclient\Client;
-
-use function array_merge;
+use yii\base\InvalidConfigException;
+use yii\httpclient\Request;
 
 /**
  * Запрос P1Sms
  */
-abstract class P1SmsRequest extends P1SMSEntity
+abstract class P1SmsRequest extends Entity
 {
-    /** @var P1SmsModule */
-    protected $_module;
+    /** @var P1Sms */
+    protected $module;
 
     /**
      * P1SmsRequest constructor.
      *
-     * @param P1SmsModule $module
+     * @param P1Sms $module
      * @param array $config
      */
-    public function __construct(P1SmsModule $module, $config = [])
+    public function __construct(P1Sms $module, array $config = [])
     {
-        $this->_module = $module;
+        $this->module = $module;
 
         parent::__construct($config);
     }
@@ -52,48 +51,67 @@ abstract class P1SmsRequest extends P1SMSEntity
      */
     public function method(): string
     {
-        return 'post';
+        return 'POST';
+    }
+
+    /**
+     * Создает ответ.
+     *
+     * @param array $json
+     * @return P1SmsResponse
+     */
+    protected function createResponse(array $json): P1SmsResponse
+    {
+        return new P1SmsResponse(['json' => $json]);
+    }
+
+    /**
+     * HTTP-запрос.
+     *
+     * @return Request
+     * @throws InvalidConfigException
+     */
+    protected function httpRequest(): Request
+    {
+        return $this->module->httpClient->createRequest()
+            ->setMethod($this->method())
+            ->setUrl($this->url())
+            ->setData($this->json);
     }
 
     /**
      * Отправить сообщение.
      *
-     * @return array результаты отправки (переопределяется в наследнике)
+     * @return P1SmsResponse результаты отправки (переопределяется в наследнике)
      * @throws Exception
      */
-    public function send() : array
+    public function send(): P1SmsResponse
     {
         if (! $this->validate()) {
             throw new ValidateException($this);
         }
 
-        $request = $this->_module->httpClient->createRequest()
-            ->setMethod($this->method())
-            ->setUrl($this->url())
-            ->setData(array_merge(['apiKey' => $this->_module->apiKey] + $this->json))
-            ->setFormat(Client::FORMAT_JSON)
-            ->setHeaders([
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json'
-            ]);
+        // запрос
+        $req = $this->httpRequest();
 
-        Yii::debug('Отправка запроса: ' . $request->toString(), __METHOD__);
+        // добавляем apiKey
+        $data = $req->data;
+        $data['apiKey'] = $this->module->apiKey;
+        $req->data = $data;
 
-        $response = $request->send();
-        if (! $response->isOk) {
-            throw new Exception('Ошибка HTTP: ' . $response->statusCode);
+        Log::debug('Запрос: ' . $req->toString());
+        $res = $req->send();
+        Log::debug('Ответ: ' . $res->toString());
+
+        if (! $res->isOk) {
+            throw new Exception('Ошибка HTTP: ' . $res->statusCode);
         }
 
-        Yii::debug('Получен ответ: ' . $response->content, __METHOD__);
-
-        $response->format = Client::FORMAT_JSON;
-        $p1response = new P1SmsResponse();
-        $p1response->setJson($response->data);
-
-        if ($p1response->status !== P1SmsResponse::STATUS_SUCCESS) {
-            throw new Exception('Ошибка запроса: ' . $response->content);
+        $response = $this->createResponse($res->data);
+        if ($response->status !== P1Sms::STATUS_SUCCESS) {
+            throw new Exception('Ошибка запроса: ' . $res->content);
         }
 
-        return $p1response->data;
+        return $response;
     }
 }

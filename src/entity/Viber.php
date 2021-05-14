@@ -1,20 +1,20 @@
 <?php
 /*
- * @copyright 2019-2020 Dicr http://dicr.org
+ * @copyright 2019-2021 Dicr http://dicr.org
  * @author Igor A Tarasov <develop@dicr.org>
- * @license MIT
- * @version 19.11.20 22:09:39
+ * @license GPL-3.0-or-later
+ * @version 15.05.21 01:50:34
  */
 
 declare(strict_types = 1);
-namespace dicr\p1sms\request;
+namespace dicr\p1sms\entity;
 
-use dicr\p1sms\P1SMSEntity;
+use dicr\p1sms\Entity;
 
 /**
  * Параметры сообщения Viber.
  */
-class ViberParameters extends P1SMSEntity
+class Viber extends Entity
 {
     /** @var string сообщение без кнопки */
     public const TYPE_TEXT = 'text';
@@ -46,7 +46,7 @@ class ViberParameters extends P1SMSEntity
     /**
      * @inheritDoc
      */
-    public function rules() : array
+    public function rules(): array
     {
         return [
             ['type', 'required'],
@@ -56,21 +56,16 @@ class ViberParameters extends P1SMSEntity
 
             ['btnText', 'trim'],
             ['btnText', 'default'],
-            ['btnText', 'require', 'when' => function () : bool {
-                return $this->type === self::TYPE_TEXT || $this->type === self::TYPE_PHONE;
-            }],
+            ['btnText', 'require',
+                'when' => fn(): bool => $this->type === self::TYPE_TEXT || $this->type === self::TYPE_PHONE],
 
             ['btnLink', 'trim'],
             ['btnLink', 'default'],
-            ['btnLink', 'required', 'when' => function () : bool {
-                return $this->type === self::TYPE_LINK;
-            }],
+            ['btnLink', 'required', 'when' => fn(): bool => $this->type === self::TYPE_LINK],
 
             ['btnPhone', 'trim'],
             ['btnPhone', 'default'],
-            ['btnPhone', 'required', 'when' => function () : bool {
-                return $this->type === self::TYPE_PHONE;
-            }],
+            ['btnPhone', 'required', 'when' => fn(): bool => $this->type === self::TYPE_PHONE],
             ['btnPhone', 'string', 'max' => 11],
 
             ['imageHash', 'trim'],

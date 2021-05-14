@@ -1,14 +1,16 @@
 # P1SMS клиент для Yii2
 
-API: https://admin.p1sms.ru/panel/apiinfo
+API: https://admin.p1sms.ru/panel/apiinfo (реализованы не все запросы)
 
 ## Конфигурация
 
 ```php
-'modules' => [
-    'p1sms' => [
-        'class' => dicr\p1sms\P1SMSModule::class,
-        'apiKey' => 'XXXXXXXXXXX',
+$config = [
+    'modules' => [
+        'p1sms' => [
+            'class' => dicr\p1sms\P1Sms::class,
+            'apiKey' => 'XXXXXXXXXXX',
+        ]
     ]
 ];
 ```
@@ -16,13 +18,13 @@ API: https://admin.p1sms.ru/panel/apiinfo
 ## Использование
 
 ```php
-use dicr\p1sms\P1SMSModule;
+use dicr\p1sms\P1Sms;
 
-/** @var P1SMSModule $module получаем модуль */ 
+/** @var P1Sms $module получаем модуль */ 
 $module = Yii::$app->getModule('p1sms');
 
 // создание запроса
-$req = $module->smsRequest([
+$req = $module->createRequest([
     'phone' => '+71111111111',
     'text' => 'Проверка',
 ]);
